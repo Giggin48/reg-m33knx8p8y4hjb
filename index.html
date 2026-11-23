@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f2f2f7">
+<title>Registro Lavoro</title>
+<style>
+:root{color-scheme:light dark;--bg:#f2f2f7;--card:#fff;--text:#171719;--muted:#85858e;--line:#e5e5ea;--blue:#007aff;--green:#20a45a;--red:#e53945;--yellow:#d18a00;--input:#f2f2f7}
+@media(prefers-color-scheme:dark){:root{--bg:#000;--card:#1c1c1e;--text:#f5f5f7;--muted:#98989f;--line:#38383a;--input:#2c2c2e}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:16px;padding-top:env(safe-area-inset-top);padding-bottom:calc(85px + env(safe-area-inset-bottom))}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+header{padding:20px 20px 12px}
+header h1{font-size:30px;font-weight:800;margin:5px 0}
+header p{color:var(--muted);margin:4px 0;font-size:14px}
+main{max-width:650px;margin:auto;padding:0 15px}
+.screen{display:none}.screen.active{display:block}
+.card{background:var(--card);border-radius:19px;padding:17px;margin-bottom:14px}
+.card h2{font-size:18px;margin:0 0 15px}
+label{display:block;font-size:14px;font-weight:650;margin-bottom:8px}
+input,textarea,select{width:100%;min-height:50px;border:1px solid var(--line);background:var(--input);color:var(--text);border-radius:12px;padding:11px 13px;outline:none;font-size:16px;-webkit-appearance:none}
+textarea{min-height:75px;resize:vertical}
+input:focus,textarea:focus,select:focus{border-color:var(--blue)}
+.field{margin-bottom:17px}
+.category-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+.category{min-height:58px;border:1.5px solid var(--line);background:var(--input);color:var(--text);border-radius:13px;padding:10px 8px;font-size:14px;font-weight:650}
+.category.selected{background:rgba(0,122,255,.11);border-color:var(--blue);color:var(--blue)}
+.quantity{display:flex;align-items:center;justify-content:center;gap:25px;padding:8px 0}
+.quantity button{width:53px;height:53px;border-radius:50%;border:none;background:var(--input);color:var(--blue);font-size:29px}
+.quantity-value{min-width:95px;text-align:center;font-size:27px;font-weight:750}
+.unit{text-align:center;font-size:13px;color:var(--muted);margin-top:2px}
+.primary{width:100%;min-height:55px;background:var(--blue);color:white;border:none;border-radius:14px;font-weight:750;font-size:17px}
+.secondary{width:100%;min-height:49px;background:var(--input);color:var(--blue);border:1px solid var(--line);border-radius:12px;font-weight:650}
+.danger{color:var(--red);border:1px solid rgba(229,57,69,.25);background:rgba(229,57,69,.08);border-radius:10px;min-height:39px;padding:5px 13px;font-size:13px;font-weight:650}
+.entry{border-bottom:1px solid var(--line);padding:13px 0}
+.entry:last-child{border-bottom:none}
+.entry-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.entry strong{font-size:15px}
+.entry small{display:block;color:var(--muted);margin-top:5px;line-height:1.4}
+.entry-note{color:var(--muted);font-size:13px;margin-top:6px;overflow-wrap:anywhere}
+.month-title{font-size:16px;font-weight:750;padding:10px 0 3px}
+.empty{color:var(--muted);text-align:center;padding:25px 10px;font-size:14px}
+.month-switch{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.month-switch button{width:48px;height:48px;border:none;border-radius:13px;background:var(--card);color:var(--blue);font-size:25px}
+.month-switch strong{text-align:center;font-size:18px}
+.summary{padding:15px;border-radius:14px;background:var(--input);margin-bottom:15px;font-weight:700;line-height:1.5}
+.compare-row{padding:14px 0;border-bottom:1px solid var(--line)}
+.compare-row:last-child{border-bottom:none}
+.compare-name{font-weight:750;font-size:15px;margin-bottom:10px}
+.compare-data{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.compare-data small{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
+.compare-data input{min-height:47px}
+.diff{margin-top:10px;font-size:13px;font-weight:750;line-height:1.4}
+.ok{color:var(--green)}.bad{color:var(--red)}.pending{color:var(--yellow)}
+.auto-label{font-size:10px;color:var(--green);background:rgba(32,164,90,.12);padding:4px 7px;border-radius:7px;margin-left:6px}
+.auto-total{font-size:32px;font-weight:800;color:var(--green);margin:8px 0}
+.note-hint{color:var(--muted);font-size:12px;line-height:1.5;margin-top:10px}
+nav{position:fixed;bottom:0;left:0;right:0;z-index:10;display:grid;grid-template-columns:repeat(4,1fr);background:var(--card);border-top:1px solid var(--line);padding:7px 5px calc(7px + env(safe-area-inset-bottom))}
+nav button{background:transparent;border:none;color:var(--muted);font-size:11px;font-weight:650;min-height:57px}
+nav button span{display:block;font-size:22px;margin-bottom:3px}
+nav button.active{color:var(--blue)}
+.toast{position:fixed;z-index:30;bottom:calc(90px + env(safe-area-inset-bottom));left:20px;right:20px;background:#242426;color:white;padding:15px;border-radius:14px;text-align:center;font-size:14px;font-weight:650;opacity:0;transform:translateY(10px);transition:.2s;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+.modal-backdrop{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:25px}
+.modal-backdrop.show{display:flex}
+.modal{width:100%;max-width:380px;background:var(--card);border-radius:20px;padding:22px}
+.modal h3{margin-top:0}
+.modal p{color:var(--muted);line-height:1.5}
+.modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
+.backup-area{min-height:160px;margin:12px 0}
+@media(max-width:360px){.compare-data{gap:7px}.card{padding:14px}}
+</style>
+</head>
+<body>
+
+<header>
+<h1 id="pageTitle">Registra</h1>
+<p>Il tuo controllo personale della busta paga</p>
+</header>
+
+<main>
+
+<section id="registra" class="screen active">
+<div class="card">
+<h2>Nuovo inserimento</h2>
+<div class="field">
+<label for="entryDate">Data</label>
+<input type="date" id="entryDate">
+</div>
+<div class="field">
+<label>Seleziona una voce</label>
+<div class="category-grid" id="categoryGrid"></div>
+</div>
+<div class="field" id="smonetUnitField" hidden>
+<label for="smonetUnit">Unità di misura</label>
+<select id="smonetUnit"><option value="ore">Ore</option><option value="giorni">Giorni</option></select>
+</div>
+<div class="field">
+<label>Quantità</label>
+<div class="quantity">
+<button type="button" id="minus">−</button>
+<div><div class="quantity-value" id="quantityValue">1</div><div class="unit" id="quantityUnit">ore</div></div>
+<button type="button" id="plus">+</button>
+</div>
+</div>
+<div class="field">
+<label for="entryNote">Nota (facoltativa)</label>
+<textarea id="entryNote" placeholder="Aggiungi una nota..."></textarea>
+</div>
+<button class="primary" id="saveEntry">Salva inserimento</button>
+</div>
+<div class="card">
+<h2>Ultimi 5 inserimenti</h2>
+<div id="recentEntries"></div>
+</div>
+</section>
+
+<section id="registro" class="screen">
+<div class="card">
+<h2>Tutti gli inserimenti</h2>
+<div id="allEntries"></div>
+</div>
+</section>
+
+<section id="confronto" class="screen">
+<div class="month-switch">
+<button id="prevMonth">‹</button>
+<strong id="monthLabel"></strong>
+<button id="nextMonth">›</button>
+</div>
+<div class="card">
+<h2>Riepilogo buoni pasto automatici</h2>
+<div class="auto-total" id="mealTotal">0</div>
+<div class="note-hint" id="mealExplanation"></div>
+</div>
+<div class="card">
+<div class="summary" id="monthSummary"></div>
+<div id="comparisonRows"></div>
+</div>
+<p class="note-hint">Differenza = tuo totale meno totale in busta paga. I valori aziendali si salvano automaticamente per ogni mese.</p>
+</section>
+
+<section id="backup" class="screen">
+<div class="card">
+<h2>Backup dei tuoi dati</h2>
+<p>Esporta tutti gli inserimenti e i confronti mensili.</p>
+<button class="primary" id="copyBackup">Copia backup</button>
+<div class="field" style="margin-top:20px">
+<label for="backupText">Testo del backup</label>
+<textarea id="backupText" class="backup-area" placeholder="Incolla qui un backup precedente per ripristinarlo."></textarea>
+</div>
+<button class="secondary" id="restoreBackup">Ripristina backup</button>
+<p class="note-hint">Il ripristino sostituisce tutti i dati presenti.</p>
+</div>
+<div class="card">
+<h2>Archiviazione</h2>
+<p class="note-hint">I dati sono salvati esclusivamente nel browser tramite localStorage. Non vengono inviati a server.</p>
+</div>
+</section>
+</main>
+
+<nav>
+<button class="active" data-screen="registra"><span>＋</span>Registra</button>
+<button data-screen="registro"><span>▤</span>Registro</button>
+<button data-screen="confronto"><span>⇄</span>Confronto</button>
+<button data-screen="backup"><span>☁</span>Backup</button>
+</nav>
+
+<div id="toast" class="toast"></div>
+<div id="modalBackdrop" class="modal-backdrop">
+<div class="modal">
+<h3 id="modalTitle">Conferma</h3>
+<p id="modalText"></p>
+<div class="modal-actions">
+<button class="secondary" id="modalCancel">Annulla</button>
+<button class="primary" id="modalConfirm">Conferma</button>
+</div>
+</div>
+</div>
+
+<script>
+"use strict";
+
+const CATEGORIES=[
+{id:"permesso",name:"Permesso",unit:"ore",step:.5},
+{id:"ferie",name:"Ferie",unit:"ore",step:.5},
+{id:"flex",name:"Flex",unit:"giorni",step:1},
+{id:"smonet_ore",name:"Smonetizzazione",unit:"ore",step:.5},
+{id:"smonet_giorni",name:"Smonetizzazione",unit:"giorni",step:.5},
+{id:"malattia",name:"Malattia",unit:"giorni",step:1},
+{id:"trasferta",name:"Trasferta",unit:"giorni",step:1},
+{id:"straordinario",name:"Straordinario",unit:"ore",step:.5},
+{id:"festivo",name:"Straordinario festivo",unit:"ore",step:.5},
+{id:"notturno",name:"Straordinario notturno",unit:"ore",step:.5}
+];
+
+const MEAL_ID="buono";
+const STORAGE_KEY="registro_lavoro_iphone_v1";
+let entries=[],payroll={},selectedCategory="permesso",quantity=1;
+let comparisonDate=new Date(),pendingAction=null;
+const $=id=>document.getElementById(id);
+
+function localDateISO(date=new Date()){
+return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;
+}
+function parseISO(s){
+const [y,m,d]=s.split("-").map(Number);
+return new Date(y,m-1,d);
+}
+function formatDate(s){return parseISO(s).toLocaleDateString("it-IT")}
+function monthKey(s){return s.slice(0,7)}
+function monthName(key){
+const [y,m]=key.split("-").map(Number);
+return new Date(y,m-1,1).toLocaleDateString("it-IT",{month:"long",year:"numeric"});
+}
+function fmt(n){
+return Number(n.toFixed(2)).toLocaleString("it-IT",{maximumFractionDigits:2});
+}
+function parseNumber(v){
+if(typeof v==="number")return Number.isFinite(v)?v:NaN;
+if(typeof v!=="string")return NaN;
+const s=v.trim().replace(/\s/g,"").replace(",",".");
+if(!s||!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(s))return NaN;
+const n=Number(s);
+return Number.isFinite(n)?n:NaN;
+}
+function getCategory(id){return CATEGORIES.find(c=>c.id===id)}
+
+function showToast(message){
+const el=$("toast");
+el.textContent=message;
+el.classList.add("show");
+clearTimeout(showToast.timer);
+showToast.timer=setTimeout(()=>el.classList.remove("show"),2500);
+}
+
+function loadData(){
+try{
+const raw=localStorage.getItem(STORAGE_KEY);
+if(!raw)return;
+const data=JSON.parse(raw);
+if(data.version!==1||!Array.isArray(data.entries)||!data.payroll||typeof data.payroll!=="object")throw Error();
+entries=data.entries.filter(e=>
+e&&typeof e.id==="string"&&typeof e.date==="string"&&
+/^\d{4}-\d{2}-\d{2}$/.test(e.date)&&getCategory(e.category)&&
+Number.isFinite(e.quantity)&&e.quantity>=0&&typeof e.note==="string"
+);
+payroll=data.payroll;
+}catch(e){entries=[];payroll={};showToast("Errore nella lettura dei dati");}
+}
+
+function saveData(){
+try{
+localStorage.setItem(STORAGE_KEY,JSON.stringify({version:1,entries,payroll}));
+return true;
+}catch(e){showToast("Spazio di archiviazione insufficiente");return false;}
+}
+
+function confirmAction(title,text,callback,label="Conferma"){
+$("modalTitle").textContent=title;
+$("modalText").textContent=text;
+$("modalConfirm").textContent=label;
+pendingAction=callback;
+$("modalBackdrop").classList.add("show");
+}
+function closeModal(){
+$("modalBackdrop").classList.remove("show");
+pendingAction=null;
+}
+$("modalCancel").addEventListener("click",closeModal);
+$("modalConfirm").addEventListener("click",()=>{
+const action=pendingAction;
+closeModal();
+if(action)action();
+});
+
+/* NAVIGAZIONE */
+document.querySelectorAll("nav button").forEach(button=>{
+button.addEventListener("click",()=>{
+const screen=button.dataset.screen;
+document.querySelectorAll(".screen").forEach(el=>el.classList.remove("active"));
+$(screen).classList.add("active");
+document.querySelectorAll("nav button").forEach(el=>el.classList.toggle("active",el===button));
+$("pageTitle").textContent={registra:"Registra",registro:"Registro",confronto:"Confronto",backup:"Backup"}[screen];
+if(screen==="registro")renderAllEntries();
+if(screen==="confronto")renderComparison();
+if(screen==="registra")renderRecent();
+});
+});
+
+/* REGISTRA */
+function renderCategories(){
+const grid=$("categoryGrid");
+grid.innerHTML="";
+CATEGORIES.forEach(c=>{
+if(c.id==="smonet_giorni")return;
+const b=document.createElement("button");
+b.type="button";b.className="category";b.textContent=c.name;
+if(c.id===selectedCategory||(c.id==="smonet_ore"&&selectedCategory==="smonet_giorni"))b.classList.add("selected");
+b.addEventListener("click",()=>{
+selectedCategory=c.id;
+if(c.id.startsWith("smonet_"))selectedCategory=$("smonetUnit").value==="ore"?"smonet_ore":"smonet_giorni";
+quantity=selectedCategory==="ferie"?8:1;
+updateQuantity();renderCategories();
+});
+grid.appendChild(b);
+});
+}
+function updateQuantity(){
+const c=getCategory(selectedCategory);
+$("quantityValue").textContent=fmt(quantity);
+$("quantityUnit").textContent=c.unit;
+$("smonetUnitField").hidden=!selectedCategory.startsWith("smonet_");
+}
+function changeQuantity(direction){
+const c=getCategory(selectedCategory);
+quantity=selectedCategory==="flex"?(direction>0?1:0):Math.max(0,Math.round((quantity+direction*c.step)*100)/100);
+updateQuantity();
+}
+$("minus").addEventListener("click",()=>changeQuantity(-1));
+$("plus").addEventListener("click",()=>changeQuantity(1));
+$("smonetUnit").addEventListener("change",()=>{
+selectedCategory=$("smonetUnit").value==="ore"?"smonet_ore":"smonet_giorni";
+quantity=1;updateQuantity();renderCategories();
+});
+$("entryDate").value=localDateISO();
+
+$("saveEntry").addEventListener("click",()=>{
+const date=$("entryDate").value;
+if(!date||!/^\d{4}-\d{2}-\d{2}$/.test(date)){showToast("Inserisci una data valida");return;}
+const c=getCategory(selectedCategory);
+if(!c||!Number.isFinite(quantity)||quantity<0){showToast("Quantità non valida");return;}
+const e={id:crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random(),date,category:selectedCategory,quantity,note:$("entryNote").value.trim()};
+entries.push(e);
+if(!saveData()){entries.pop();return;}
+$("entryNote").value="";
+showToast("Inserimento salvato ✓");
+renderRecent();renderComparison();
+});
+
+function deleteEntry(id){
+confirmAction("Eliminare inserimento?","L'inserimento verrà cancellato definitivamente.",()=>{
+const old=entries;
+entries=entries.filter(e=>e.id!==id);
+if(!saveData()){entries=old;return;}
+renderRecent();renderAllEntries();renderComparison();
+showToast("Inserimento eliminato");
+},"Elimina");
+}
+function createEntryElement(e){
+const c=getCategory(e.category);
+const wrapper=document.createElement("div");wrapper.className="entry";
+const top=document.createElement("div");top.className="entry-top";
+const info=document.createElement("div");
+const title=document.createElement("strong");title.textContent=c.name;
+const details=document.createElement("small");details.textContent=`${formatDate(e.date)} · ${fmt(e.quantity)} ${c.unit}`;
+info.append(title,details);
+const button=document.createElement("button");button.className="danger";button.textContent="Elimina";
+button.addEventListener("click",()=>deleteEntry(e.id));
+top.append(info,button);wrapper.append(top);
+if(e.note){const note=document.createElement("div");note.className="entry-note";note.textContent="Nota: "+e.note;wrapper.append(note);}
+return wrapper;
+}
+function renderRecent(){
+const el=$("recentEntries");el.innerHTML="";
+const recent=[...entries].sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id)).slice(0,5);
+if(!recent.length){el.innerHTML='<div class="empty">Non hai ancora registrato inserimenti.</div>';return;}
+recent.forEach(e=>el.appendChild(createEntryElement(e)));
+}
+function renderAllEntries(){
+const el=$("allEntries");el.innerHTML="";
+if(!entries.length){el.innerHTML='<div class="empty">Il registro è ancora vuoto.</div>';return;}
+const groups={};
+[...entries].sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id)).forEach(e=>{
+const k=monthKey(e.date);(groups[k]??=[]).push(e);
+});
+Object.keys(groups).sort().reverse().forEach(k=>{
+const title=document.createElement("div");title.className="month-title";title.textContent=monthName(k);el.appendChild(title);
+groups[k].forEach(e=>el.appendChild(createEntryElement(e)));
+});
+}
+
+/* BUONI PASTO AUTOMATICI */
+function calculateMealTickets(key){
+const [year,month]=key.split("-").map(Number);
+const days=new Date(year,month,0).getDate();
+let weekdays=0,vacationDays=0,permissionDays=0,total=0;
+
+for(let day=1;day<=days;day++){
+const date=`${year}-${String(month).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+const weekday=parseISO(date).getDay();
+if(weekday===0||weekday===6)continue;
+weekdays++;
+
+const daily=entries.filter(e=>e.date===date);
+const hasVacation=daily.some(e=>e.category==="ferie"&&e.quantity>0);
+const hours=daily.filter(e=>e.category==="permesso").reduce((s,e)=>s+e.quantity,0);
+
+if(hasVacation)vacationDays++;
+else if(hours>4)permissionDays++;
+else total++;
+}
+return{total,weekdays,vacationDays,permissionDays};
+}
+
+function totalsForMonth(key){
+const totals={};
+CATEGORIES.forEach(c=>totals[c.id]=0);
+entries.filter(e=>monthKey(e.date)===key).forEach(e=>totals[e.category]+=e.quantity);
+totals[MEAL_ID]=calculateMealTickets(key).total;
+return totals;
+}
+function currentMonthKey(){return localDateISO(comparisonDate).slice(0,7)}
+function getPayrollValue(key,id){
+const v=payroll[key]?.[id];
+return v===undefined||v===null?"":String(v);
+}
+function setPayrollValue(key,id,value){
+const old=payroll[key]?.[id];
+if(!payroll[key])payroll[key]={};
+if(value.trim()==="")delete payroll[key][id];
+else{
+const n=parseNumber(value);
+if(!Number.isFinite(n))return;
+payroll[key][id]=n;
+}
+if(!saveData()){
+if(old===undefined)delete payroll[key][id];
+else payroll[key][id]=old;
+}
+}
+
+function renderComparison(){
+const key=currentMonthKey();
+$("monthLabel").textContent=monthName(key).replace(/^./,s=>s.toUpperCase());
+
+const meal=calculateMealTickets(key);
+$("mealTotal").textContent=meal.total;
+$("mealExplanation").textContent=
+`${meal.weekdays} giorni feriali · ${meal.vacationDays} giorni di ferie esclusi · ${meal.permissionDays} giorni con oltre 4 ore di permesso esclusi. Gli straordinari non aggiungono buoni.`;
+
+const totals=totalsForMonth(key);
+const rows=[...CATEGORIES,{id:MEAL_ID,name:"Buono pasto",unit:"n.",automatic:true}];
+const container=$("comparisonRows");
+container.innerHTML="";
+
+function updateSummary(){
+let bad=0,waiting=0,ok=0;
+rows.forEach(c=>{
+const t=totals[c.id]||0,v=getPayrollValue(key,c.id);
+if(t===0&&v.trim()==="")return;
+if(v.trim()===""){if(t!==0)waiting++;return;}
+const n=parseNumber(v);
+if(!Number.isFinite(n))return;
+if(Math.abs(t-n)<0.000001)ok++;else bad++;
+});
+$("monthSummary").textContent=(bad+waiting)===0?
+`✓ Tutti i valori verificati. ${ok} voci coincidono.`:
+`${bad} ${bad===1?"voce non coincide":"voci non coincidono"} con la busta paga · ${waiting} da inserire`;
+}
+
+rows.forEach(c=>{
+const total=totals[c.id]||0;
+const value=getPayrollValue(key,c.id);
+const row=document.createElement("div");row.className="compare-row";
+const name=document.createElement("div");name.className="compare-name";name.textContent=c.name+" ("+c.unit+")";
+if(c.automatic){const tag=document.createElement("span");tag.className="auto-label";tag.textContent="AUTOMATICO";name.append(tag);}
+const data=document.createElement("div");data.className="compare-data";
+const mine=document.createElement("div");
+const mineLabel=document.createElement("small");mineLabel.textContent="Tuo totale";
+const mineValue=document.createElement("strong");mineValue.textContent=fmt(total);mineValue.style.fontSize="22px";
+mine.append(mineLabel,mineValue);
+const company=document.createElement("div");
+const companyLabel=document.createElement("small");companyLabel.textContent="In busta paga";
+const input=document.createElement("input");input.type="text";input.inputMode="decimal";input.placeholder="—";input.value=value;
+company.append(companyLabel,input);
+data.append(mine,company);
+const diff=document.createElement("div");diff.className="diff";
+function updateDiff(){
+const v=getPayrollValue(key,c.id);
+if(v.trim()===""){
+if(total===0){diff.textContent="";diff.className="diff";}
+else{diff.textContent="Da inserire dalla busta paga";diff.className="diff pending";}
+return;
+}
+const n=parseNumber(v);
+if(!Number.isFinite(n)){diff.textContent="Valore non valido";diff.className="diff bad";return;}
+const d=Math.round((total-n)*100)/100;
+if(d===0){diff.textContent="✓ Coincide";diff.className="diff ok";}
+else{diff.textContent="Differenza: "+(d>0?"+":"")+fmt(d)+" "+c.unit+" (tuo totale meno busta paga)";diff.className="diff bad";}
+}
+input.addEventListener("input",()=>{
+const raw=input.value;
+if(raw.trim()!==""&&!Number.isFinite(parseNumber(raw))){input.style.borderColor="var(--red)";return;}
+input.style.borderColor="";
+setPayrollValue(key,c.id,raw);
+updateDiff();updateSummary();
+});
+updateDiff();
+row.append(name,data,diff);
+container.appendChild(row);
+});
+updateSummary();
+}
+
+$("prevMonth").addEventListener("click",()=>{
+comparisonDate=new Date(comparisonDate.getFullYear(),comparisonDate.getMonth()-1,1);
+renderComparison();
+});
+$("nextMonth").addEventListener("click",()=>{
+comparisonDate=new Date(comparisonDate.getFullYear(),comparisonDate.getMonth()+1,1);
+renderComparison();
+});
+
+/* BACKUP */
+function sanitizeBackup(data){
+if(!data||data.version!==1||!Array.isArray(data.entries)||!data.payroll||typeof data.payroll!=="object"||Array.isArray(data.payroll))return null;
+const clean=data.entries.filter(e=>
+e&&typeof e.id==="string"&&typeof e.date==="string"&&
+/^\d{4}-\d{2}-\d{2}$/.test(e.date)&&getCategory(e.category)&&
+Number.isFinite(e.quantity)&&e.quantity>=0&&typeof e.note==="string"
+).map(e=>({id:e.id,date:e.date,category:e.category,quantity:e.quantity,note:e.note}));
+if(clean.length!==data.entries.length)return null;
+const pay={};
+for(const k of Object.keys(data.payroll)){
+if(!/^\d{4}-\d{2}$/.test(k))return null;
+const m=data.payroll[k];
+if(!m||typeof m!=="object"||Array.isArray(m))return null;
+pay[k]={};
+for(const id of Object.keys(m)){
+if(!getCategory(id)&&id!==MEAL_ID)return null;
+if(!Number.isFinite(m[id]))return null;
+pay[k][id]=m[id];
+}
+}
+return{entries:clean,payroll:pay};
+}
+
+$("copyBackup").addEventListener("click",async()=>{
+const text=JSON.stringify({version:1,entries,payroll});
+$("backupText").value=text;
+let copied=false;
+try{
+if(navigator.clipboard&&navigator.clipboard.writeText){await navigator.clipboard.writeText(text);copied=true;}
+}catch(e){}
+if(!copied){
+try{
+const area=$("backupText");
+area.focus();area.select();area.setSelectionRange(0,text.length);
+copied=document.execCommand("copy");
+}catch(e){}
+}
+showToast(copied?"Backup copiato ✓":"Seleziona il testo nella casella e copialo a mano");
+});
+
+$("restoreBackup").addEventListener("click",()=>{
+const raw=$("backupText").value.trim();
+if(!raw){showToast("Incolla prima il testo del backup");return;}
+let parsed=null;
+try{parsed=sanitizeBackup(JSON.parse(raw));}catch(e){parsed=null;}
+if(!parsed){showToast("Backup non valido o incompleto");return;}
+confirmAction("Ripristinare il backup?","Verranno sostituiti tutti i dati presenti ("+parsed.entries.length+" inserimenti nel backup).",()=>{
+const oldEntries=entries,oldPayroll=payroll;
+entries=parsed.entries;payroll=parsed.payroll;
+if(!saveData()){entries=oldEntries;payroll=oldPayroll;return;}
+$("backupText").value="";
+renderRecent();renderAllEntries();renderComparison();
+showToast("Backup ripristinato ✓");
+},"Ripristina");
+});
+
+/* AVVIO */
+loadData();
+renderCategories();
+updateQuantity();
+renderRecent();
+renderComparison();
+</script>
+</body>
+</html>
