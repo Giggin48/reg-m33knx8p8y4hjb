@@ -191,11 +191,13 @@ nav button.active{color:var(--blue)}
 "use strict";
 
 const CATEGORIES=[
-{id:"permesso",name:"Permesso",unit:"ore",step:.5},
+{id:"permesso",name:"Permesso personale (0002)",unit:"ore",step:.5},
+{id:"pir",name:"PIR retribuiti (0131)",unit:"ore",step:.5},
+{id:"fs",name:"Festività soppresse (0003)",unit:"ore",step:.5},
 {id:"ferie",name:"Ferie",unit:"ore",step:.5},
 {id:"flex",name:"Flex",unit:"giorni",step:1},
-{id:"smonet_ore",name:"Smonetizzazione",unit:"ore",step:.5},
-{id:"smonet_giorni",name:"Smonetizzazione",unit:"giorni",step:.5},
+{id:"smonet_ore",name:"Smonetizzazione (0081)",unit:"ore",step:.5},
+{id:"smonet_giorni",name:"Smonetizzazione (0081)",unit:"giorni",step:.5},
 {id:"malattia",name:"Malattia",unit:"giorni",step:1},
 {id:"trasferta",name:"Trasferta",unit:"giorni",step:1},
 {id:"straordinario",name:"Straordinario",unit:"ore",step:.5},
@@ -403,7 +405,7 @@ weekdays++;
 
 const daily=entries.filter(e=>e.date===date);
 const hasVacation=daily.some(e=>e.category==="ferie"&&e.quantity>0);
-const hours=daily.filter(e=>e.category==="permesso").reduce((s,e)=>s+e.quantity,0);
+const hours=daily.filter(e=>["permesso","pir","fs"].includes(e.category)).reduce((s,e)=>s+e.quantity,0);
 
 if(hasVacation)vacationDays++;
 else if(hours>4)permissionDays++;
