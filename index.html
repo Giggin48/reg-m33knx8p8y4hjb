@@ -146,6 +146,10 @@ nav button.active{color:var(--blue)}
 <div class="summary" id="monthSummary"></div>
 <div id="comparisonRows"></div>
 </div>
+<div class="card">
+<h2>Note del mese</h2>
+<textarea id="monthNote" placeholder="Es. 3 ore di PIR non pagate, scritto all'ufficio paghe il..."></textarea>
+</div>
 <p class="note-hint">Differenza = tuo totale meno totale in busta paga. I valori aziendali si salvano automaticamente per ogni mese.</p>
 </section>
 
@@ -158,6 +162,10 @@ nav button.active{color:var(--blue)}
 <div class="card">
 <h2>Saldo totale per voce</h2>
 <div id="balanceList"></div>
+</div>
+<div class="card">
+<h2>Note dei mesi</h2>
+<div id="notesList"></div>
 </div>
 <div class="month-switch">
 <button id="prevYear">‹</button>
@@ -230,7 +238,7 @@ const CATEGORIES=[
 
 const MEAL_ID="buono";
 const STORAGE_KEY="registro_lavoro_iphone_v1";
-let entries=[],payroll={},selectedCategory="permesso",quantity=1;
+let entries=[],payroll={},notes={},selectedCategory="permesso",quantity=1;
 let comparisonDate=new Date(),pendingAction=null;
 const $=id=>document.getElementById(id);
 
@@ -280,12 +288,13 @@ e&&typeof e.id==="string"&&typeof e.date==="string"&&
 Number.isFinite(e.quantity)&&e.quantity>=0&&typeof e.note==="string"
 );
 payroll=data.payroll;
-}catch(e){entries=[];payroll={};showToast("Errore nella lettura dei dati");}
+notes=(data.notes&&typeof data.notes==="object"&&!Array.isArray(data.notes))?Object.fromEntries(Object.entries(data.notes).filter(([k,v])=>/^\d{4}-\d{2}$/.test(k)&&typeof v==="string")):{};
+}catch(e){entries=[];payroll={};notes={};showToast("Errore nella lettura dei dati");}
 }
 
 function saveData(){
 try{
-localStorage.setItem(STORAGE_KEY,JSON.stringify({version:1,entries,payroll}));
+localStorage.setItem(STORAGE_KEY,JSON.stringify({version:1,entries,payroll,notes}));
 return true;
 }catch(e){showToast("Spazio di archiviazione insufficiente");return false;}
 }
@@ -469,6 +478,7 @@ function renderComparison(){
 const key=currentMonthKey();
 $("monthLabel").textContent=monthName(key).replace(/^./,s=>s.toUpperCase());
 
+$("monthNote").value=notes[key]||"";
 const meal=calculateMealTickets(key);
 $("mealTotal").textContent=meal.total;
 $("mealExplanation").textContent=
@@ -538,6 +548,12 @@ container.appendChild(row);
 updateSummary();
 }
 
+$("monthNote").addEventListener("input",()=>{
+const key=currentMonthKey(),v=$("monthNote").value;
+const old=notes[key];
+if(v.trim()==="")delete notes[key];else notes[key]=v;
+if(!saveData()){if(old===undefined)delete notes[key];else notes[key]=old;}
+});
 $("prevMonth").addEventListener("click",()=>{
 comparisonDate=new Date(comparisonDate.getFullYear(),comparisonDate.getMonth()-1,1);
 renderComparison();
@@ -586,6 +602,14 @@ b.textContent=d===0?"in pari":d>0?`ti devono ${fmt(d)}`:`pagate in più ${fmt(-d
 div.appendChild(b);bal.appendChild(div);
 });
 if(!bal.children.length)bal.innerHTML='<p class="note-hint">Nessun dato.</p>';
+const nl=$("notesList");nl.innerHTML="";
+Object.keys(notes).sort().forEach(k=>{
+const div=document.createElement("div");div.className="compare-row";
+const t=document.createElement("div");t.className="compare-name";t.textContent=monthName(k).replace(/^./,x=>x.toUpperCase());
+const m=document.createElement("div");m.style.whiteSpace="pre-wrap";m.style.fontSize="14px";m.textContent=notes[k];
+div.append(t,m);nl.appendChild(div);
+});
+if(!nl.children.length)nl.innerHTML='<p class="note-hint">Nessuna nota. Le scrivi nella scheda Confronto.</p>';
 $("yearLabel").textContent="Anno "+summaryYear;
 const q=$("quotaList");q.innerHTML="";
 QUOTAS.forEach(o=>{
@@ -622,11 +646,19 @@ if(!Number.isFinite(m[id]))return null;
 pay[k][id]=m[id];
 }
 }
-return{entries:clean,payroll:pay};
+const nn={};
+if(data.notes!==undefined){
+if(!data.notes||typeof data.notes!=="object"||Array.isArray(data.notes))return null;
+for(const k of Object.keys(data.notes)){
+if(!/^\d{4}-\d{2}$/.test(k)||typeof data.notes[k]!=="string")return null;
+nn[k]=data.notes[k];
+}
+}
+return{entries:clean,payroll:pay,notes:nn};
 }
 
 $("copyBackup").addEventListener("click",async()=>{
-const text=JSON.stringify({version:1,entries,payroll});
+const text=JSON.stringify({version:1,entries,payroll,notes});
 $("backupText").value=text;
 let copied=false;
 try{
@@ -649,9 +681,9 @@ let parsed=null;
 try{parsed=sanitizeBackup(JSON.parse(raw));}catch(e){parsed=null;}
 if(!parsed){showToast("Backup non valido o incompleto");return;}
 confirmAction("Ripristinare il backup?","Verranno sostituiti tutti i dati presenti ("+parsed.entries.length+" inserimenti nel backup).",()=>{
-const oldEntries=entries,oldPayroll=payroll;
-entries=parsed.entries;payroll=parsed.payroll;
-if(!saveData()){entries=oldEntries;payroll=oldPayroll;return;}
+const oldEntries=entries,oldPayroll=payroll,oldNotes=notes;
+entries=parsed.entries;payroll=parsed.payroll;notes=parsed.notes;
+if(!saveData()){entries=oldEntries;payroll=oldPayroll;notes=oldNotes;return;}
 $("backupText").value="";
 renderRecent();renderAllEntries();renderComparison();
 showToast("Backup ripristinato ✓");
