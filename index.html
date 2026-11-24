@@ -104,7 +104,7 @@ nav button.active{color:var(--blue)}
 <label for="smonetUnit">Unità di misura</label>
 <select id="smonetUnit"><option value="ore">Ore</option><option value="giorni">Giorni</option></select>
 </div>
-<div class="field">
+<div class="field" id="quantityField">
 <label>Quantità</label>
 <div class="quantity">
 <button type="button" id="minus">−</button>
@@ -113,7 +113,7 @@ nav button.active{color:var(--blue)}
 </div>
 </div>
 <div class="field">
-<label for="entryNote">Nota (facoltativa)</label>
+<label for="entryNote" id="noteLabel">Nota (facoltativa)</label>
 <textarea id="entryNote" placeholder="Aggiungi una nota..."></textarea>
 </div>
 <button class="primary" id="saveEntry">Salva inserimento</button>
@@ -233,7 +233,8 @@ const CATEGORIES=[
 {id:"trasferta",name:"Trasferta",unit:"giorni",step:1},
 {id:"straordinario",name:"Straordinario",unit:"ore",step:.5},
 {id:"festivo",name:"Straordinario festivo",unit:"ore",step:.5},
-{id:"notturno",name:"Straordinario notturno",unit:"ore",step:.5}
+{id:"notturno",name:"Straordinario notturno",unit:"ore",step:.5},
+{id:"nota",name:"Nota",unit:"",step:0,noQty:true}
 ];
 
 const MEAL_ID="buono";
@@ -355,6 +356,8 @@ const c=getCategory(selectedCategory);
 $("quantityValue").textContent=fmt(quantity);
 $("quantityUnit").textContent=c.unit;
 $("smonetUnitField").hidden=!selectedCategory.startsWith("smonet_");
+$("quantityField").hidden=!!c.noQty;
+$("noteLabel").textContent=c.noQty?"Scrivi la nota":"Nota (facoltativa)";
 }
 function changeQuantity(direction){
 const c=getCategory(selectedCategory);
@@ -374,7 +377,8 @@ const date=$("entryDate").value;
 if(!date||!/^\d{4}-\d{2}-\d{2}$/.test(date)){showToast("Inserisci una data valida");return;}
 const c=getCategory(selectedCategory);
 if(!c||!Number.isFinite(quantity)||quantity<0){showToast("Quantità non valida");return;}
-const e={id:crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random(),date,category:selectedCategory,quantity,note:$("entryNote").value.trim()};
+if(c.noQty&&!$("entryNote").value.trim()){showToast("Scrivi il testo della nota");return;}
+const e={id:crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random(),date,category:selectedCategory,quantity:c.noQty?0:quantity,note:$("entryNote").value.trim()};
 entries.push(e);
 if(!saveData()){entries.pop();return;}
 $("entryNote").value="";
@@ -397,12 +401,12 @@ const wrapper=document.createElement("div");wrapper.className="entry";
 const top=document.createElement("div");top.className="entry-top";
 const info=document.createElement("div");
 const title=document.createElement("strong");title.textContent=c.name;
-const details=document.createElement("small");details.textContent=`${formatDate(e.date)} · ${fmt(e.quantity)} ${c.unit}`;
+const details=document.createElement("small");details.textContent=c.noQty?formatDate(e.date):`${formatDate(e.date)} · ${fmt(e.quantity)} ${c.unit}`;
 info.append(title,details);
 const button=document.createElement("button");button.className="danger";button.textContent="Elimina";
 button.addEventListener("click",()=>deleteEntry(e.id));
 top.append(info,button);wrapper.append(top);
-if(e.note){const note=document.createElement("div");note.className="entry-note";note.textContent="Nota: "+e.note;wrapper.append(note);}
+if(e.note){const note=document.createElement("div");note.className="entry-note";note.textContent=(c.noQty?"":"Nota: ")+e.note;wrapper.append(note);}
 return wrapper;
 }
 function renderRecent(){
@@ -485,7 +489,7 @@ $("mealExplanation").textContent=
 `${meal.weekdays} giorni feriali · ${meal.vacationDays} giorni di ferie esclusi · ${meal.permissionDays} giorni con oltre 4 ore di permesso esclusi. Gli straordinari non aggiungono buoni.`;
 
 const totals=totalsForMonth(key);
-const rows=[...CATEGORIES,{id:MEAL_ID,name:"Buono pasto",unit:"n.",automatic:true}];
+const rows=[...CATEGORIES.filter(c=>!c.noQty),{id:MEAL_ID,name:"Buono pasto",unit:"n.",automatic:true}];
 const container=$("comparisonRows");
 container.innerHTML="";
 
@@ -567,7 +571,7 @@ renderComparison();
 let summaryYear=new Date().getFullYear();
 const QUOTAS=[{id:"permesso",limit:30},{id:"pir",limit:16},{id:"fs",limit:24}];
 function renderSummary(){
-const rows=[...CATEGORIES,{id:MEAL_ID,name:"Buono pasto",unit:"n."}];
+const rows=[...CATEGORIES.filter(c=>!c.noQty),{id:MEAL_ID,name:"Buono pasto",unit:"n."}];
 const keys=new Set(Object.keys(payroll).filter(k=>payroll[k]&&Object.keys(payroll[k]).length));
 const sorted=[...keys].sort();
 const unpaid=$("unpaidList");unpaid.innerHTML="";
